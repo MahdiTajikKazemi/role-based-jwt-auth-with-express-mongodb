@@ -121,7 +121,10 @@ function generateTokens(payload) {
     expiresIn: "5d",
   });
 
-  return { access_token: AccessToken, refresh_token: refreshToken };
+  return {
+    access_token: `Bearer ${AccessToken}`,
+    refresh_token: `Bearer ${refreshToken}`,
+  };
 }
 
 module.exports = router;
