@@ -33,7 +33,8 @@ router.post("/signup", async (req, res) => {
   });
   await newRefresh.save();
 
-  res.status(201).send(tokens);
+  const { _id, username, email } = user;
+  res.send({ _id, username, email, ...tokens });
 });
 
 router.post("/login", async (req, res) => {
@@ -61,19 +62,25 @@ router.post("/login", async (req, res) => {
   });
 
   if (!refreshToken) {
-    console.log("not refresh");
     refreshToken = new Refresh({
       userId: user._id,
       token: tokens.refresh_token,
     });
   } else {
-    console.log("yes refresh");
     refreshToken.token = tokens.refresh_token;
   }
 
   await refreshToken.save();
 
-  res.send(tokens);
+  const { _id, username, email } = user;
+
+  // res.send({ _id, username, email, ...tokens });
+
+  //Send tokens alongside headers
+  res
+    .header("accessToken", tokens.access_token)
+    .header("refreshToken", tokens.refresh_token)
+    .send({ _id, username, email });
 });
 
 router.post("/refresh", async (req, res) => {
