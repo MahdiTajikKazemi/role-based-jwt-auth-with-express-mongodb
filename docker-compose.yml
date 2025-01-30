@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  api:
+    depends_on:
+      - db
+    build: ./
+    ports:
+      - 3333:3333
+    env_file:
+      - .env.sample
+  db:
+    image: mongo:4.0-xenial
+    ports:
+      - 27017:27017
+    volumes:
+      - express_auth:/data/db
+
+volumes:
+  express_auth:
