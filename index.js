@@ -3,6 +3,7 @@ const express = require("express");
 const Joi = require("joi");
 Joi.objectId = require("joi-objectid")(Joi);
 const app = express();
+const cookieParser = require("cookie-parser");
 
 const users = require("./routes/users");
 const products = require("./routes/products");
@@ -13,6 +14,7 @@ require("./db")();
 
 app.use(express.json());
 app.use(express.json());
+app.use(cookieParser());
 
 app.use("/users", users);
 app.use("/products", products);

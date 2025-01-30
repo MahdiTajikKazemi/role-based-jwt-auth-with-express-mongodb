@@ -74,12 +74,25 @@ router.post("/login", async (req, res) => {
 
   const { _id, username, email } = user;
 
+  //Send as tokens as plain response
   // res.send({ _id, username, email, ...tokens });
 
   //Send tokens alongside headers
+  // res
+  //   .header("accessToken", tokens.access_token)
+  //   .header("refreshToken", tokens.refresh_token)
+  //   .send({ _id, username, email });
+
+  //Send tokens as secure / httpOnly cookie
   res
-    .header("accessToken", tokens.access_token)
-    .header("refreshToken", tokens.refresh_token)
+    .cookie("accessToken", tokens.access_token, {
+      httpOnly: true,
+      maxAge: 15 * 60 * 1000,
+    })
+    .cookie("refreshToken", tokens.refresh_token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
     .send({ _id, username, email });
 });
 
