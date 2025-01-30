@@ -1,5 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
+const auth = require("../middlewares/auth");
 const JWT = require("jsonwebtoken");
 const _ = require("lodash");
 const { User, validate } = require("../models/user");
@@ -14,7 +15,7 @@ router.post("/signup", async (req, res) => {
   let user = await User.findOne({ email: req.body.email });
   if (user) return res.status(400).send("User already registered.");
 
-  user = new User(_.pick(req.body, ["username", "email", "password"]));
+  user = new User(_.pick(req.body, ["username", "email", "password", "role"]));
 
   user.password = await bcrypt.hash(user.password, 10);
 
@@ -23,6 +24,7 @@ router.post("/signup", async (req, res) => {
   const payload = {
     sub: user._id,
     email: user.email,
+    role: user.role,
   };
 
   const tokens = generateTokens(payload);
@@ -33,8 +35,8 @@ router.post("/signup", async (req, res) => {
   });
   await newRefresh.save();
 
-  const { _id, username, email } = user;
-  res.send({ _id, username, email, ...tokens });
+  const { _id, username, email, role } = user;
+  res.send({ _id, username, email, role, ...tokens });
 });
 
 router.post("/login", async (req, res) => {
@@ -53,6 +55,7 @@ router.post("/login", async (req, res) => {
   const payload = {
     sub: user._id,
     email: user.email,
+    role: user.role,
   };
 
   const tokens = generateTokens(payload);
@@ -72,16 +75,16 @@ router.post("/login", async (req, res) => {
 
   await refreshToken.save();
 
-  const { _id, username, email } = user;
+  const { _id, username, email, role } = user;
 
   //Send as tokens as plain response
-  // res.send({ _id, username, email, ...tokens });
+  // res.send({ _id, username, email, role, ...tokens });
 
   //Send tokens alongside headers
   // res
   //   .header("accessToken", tokens.access_token)
   //   .header("refreshToken", tokens.refresh_token)
-  //   .send({ _id, username, email });
+  //   .send({ _id, username, email, role });
 
   //Send tokens as secure / httpOnly cookie
   res
@@ -93,10 +96,10 @@ router.post("/login", async (req, res) => {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     })
-    .send({ _id, username, email });
+    .send({ _id, username, email, role });
 });
 
-router.post("/refresh", async (req, res) => {
+router.post("/refresh", auth, async (req, res) => {
   const { error } = validateRefreshToken(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -111,6 +114,7 @@ router.post("/refresh", async (req, res) => {
   const payload = {
     sub: req.body.userId,
     email: user.email,
+    role: user.role,
   };
 
   const tokens = generateTokens(payload);
@@ -121,7 +125,7 @@ router.post("/refresh", async (req, res) => {
   res.send(tokens);
 });
 
-router.put("/logout/:id", async (req, res) => {
+router.put("/logout/:id", auth, async (req, res) => {
   const refreshToken = await Refresh.findOne({
     userId: req.params.id,
   });
