@@ -16,9 +16,9 @@ app.use(express.json());
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/users", users);
-app.use("/products", products);
-app.use("/auth", auth);
+app.use("/api/v1/users", users);
+app.use("/api/v1/products", products);
+app.use("/api/v1/auth", auth);
 
 const port = process.env.PORT || 3333;
 app.listen(port, () => console.log(`Listening on port ${port}...`));
